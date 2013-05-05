@@ -1,34 +1,37 @@
 #include <winsock.mqh>
-string socket_protocol="TCP";
+
+string socket_protocol = "TCP";
  
-#define BUFFER 200
+#define BUFFER 1024
  
- 
-void selectpoll() {
-   
-   int nfds = 1;
-   select( nfds, readfds, NULL, NULL , timeout );
-   
-} 
  
 int err = 0;
 int err(int code) {
   err = code;
   return(code);
 }
+
+//----------------------
 int errno() {
   int ret = err;
   err = 0;
   return(ret);
 }
  
+
+
+//---------------------- 
 int sock_close(int sock) {
   int ret = closesocket(sock);
   err(ret);
   return(ret);
 }
  
+
+
+//---------------------- 
 string sock_receive(int msgsock) {
+
    int Buffer[BUFFER];
    int retval = recv(msgsock, Buffer, ArraySize(Buffer)<<2, 0);
    if (retval == SOCKET_ERROR) {
@@ -48,7 +51,11 @@ string sock_receive(int msgsock) {
    item = StringSubstr(item,0,retval);
    return(item);
 }
-          
+
+
+
+
+//----------------------          
 int sock_send(int msgsock, string response) {
    
    int SendBuffer[];
@@ -70,6 +77,18 @@ int sock_send(int msgsock, string response) {
 }
 
 
+
+
+//----------------------
+int socket_server( int port ) {
+
+  int conn_socket = open_socket( port , "");
+  return (conn_socket);
+}
+
+
+
+//----------------------
 int socket_client( int port , string ip_address ){
    
    int wsaData[WSADATA];
@@ -111,60 +130,86 @@ int socket_client( int port , string ip_address ){
    return (conn_socket);
 }
  
-int open_socket(int port,string ip_address) {
+
+
+//----------------------
+int open_socket(int port, string ip_address) {
+
     int listen_socket; 
     int Buffer[BUFFER];
     int retval;
     int fromlen[1];
     int i, loopcount=0;
     int socket_type = SOCK_STREAM;
-    int  local[sockaddr_in], from[sockaddr_in];
+    int local[sockaddr_in], from[sockaddr_in];
     int wsaData[WSADATA];
    
-    if (port==0) {
-      err(-1);
-      return(-1);
-    }    
- 
     retval = WSAStartup(0x202, wsaData);
     if (retval != 0) {
         Print("Server: WSAStartup() failed with error "+ retval);
         err(-1);
         return(-1);
-    } else
-       Print("Server: WSAStartup() is OK.");
- 
-    int2struct(local,sin_family,AF_INET);
-    Print(AF_INET+" family:"+local[0]+" "+local[1]+" "+local[2]+" "+local[3]+" f:"+sin_family);
-    if (ip_address=="") 
+    } else {
+
+      Print("Server: WSAStartup() is OK.");
+    }
+
+
+    int2struct(local, sin_family, AF_INET);
+
+    Print( "local: ", local[0] , " ", local[1], " ", local[2], " ", local[3] );
+    
+    if ( ip_address == "" ) {
       int2struct(local,sin_addr,INADDR_ANY); 
-    else  
-      int2struct(local,sin_addr,inet_addr(ip_address)); 
-    Print(inet_addr(ip_address)+" addr:"+local[0]+" "+local[1]+" "+local[2]+" "+local[3]+" f:"+sin_addr);
+    
+    } else {  
+      int2struct(local,sin_addr,inet_addr(ip_address));
+
+    }
+
+    Print( "Port: " , port );
+
     int2struct(local,sin_port,htons(port));
-    Print(htons(port)+" port:"+local[0]+" "+local[1]+" "+local[2]+" "+local[3]+" f:"+sin_port);
+    Print( "local: ", local[0] , " ", local[1], " ", local[2], " ", local[3] );
+    
+
     listen_socket = socket(AF_INET, socket_type,0);
  
     if (listen_socket == INVALID_SOCKET){
+        
         Print("Server: socket() failed with error "+WSAGetLastError());
         err(-1);
         WSACleanup();
         return(-1);
-    } else
+    
+    } else {
+
        Print("Server: socket() is OK.");
-    Print("sin_family:"+struct2int(local,sin_family)+" sin_port:"+struct2int(local,sin_port)+" sin_addr:"+struct2int(local,sin_addr));
-    if (bind(listen_socket, local, ArraySize(local)<<2) == SOCKET_ERROR) {
-        Print("Server: bind() failed with error "+WSAGetLastError());
+    }
+
+    Print("sin_family: ", struct2int(local,sin_family) , " sin_port: " , struct2int(local,sin_port) , " sin_addr: " , struct2int(local,sin_addr)  );   
+    
+    Print( local[0]," ", local[1]," ", local[2], " ",local[3], " ",local[4] );
+
+    if ( bind(listen_socket, local, ArraySize(local) << 2 ) == SOCKET_ERROR ) {
+        
+        Print("Server: bind() failed with error " + WSAGetLastError());
         WSACleanup();
+        
         err(-1);
         return(-1);
-    } else
+    
+
+    } else {
         Print("Server: bind() is OK");
- 
+    }
+
+
     if (socket_type != SOCK_DGRAM) {
         if (listen(listen_socket,5) == SOCKET_ERROR) {
             Print("Server: listen() failed with error "+ WSAGetLastError());
             WSACleanup();
+           
             err(-1);
             return(-1);
         } else
@@ -174,7 +219,12 @@ int open_socket(int port,string ip_address) {
     return(listen_socket);
  }
  
+
+
+
+//----------------------
 int sock_accept(int listen_socket) {
+
     int msgsock;
     int fromlen[1];
     int  local[sockaddr_in], from[sockaddr_in];
@@ -194,6 +244,9 @@ int sock_accept(int listen_socket) {
    return(msgsock);
 }
  
+
+
+//----------------------
 void sock_cleanup() {
   WSACleanup();
 }
