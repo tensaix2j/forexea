@@ -17,6 +17,8 @@ int gethostbyname(string name);
 int gethostbyaddr(string addr, int len, int type);
 int inet_addr(string addr); 
 string inet_ntoa(int addr );
+int select( int unused, int &ReadSet[], int &WriteSet[] , int unused, int unused );
+
 #import
 
 //Addresses
