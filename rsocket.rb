@@ -1,6 +1,7 @@
 
 require 'rubygems'
 require 'socket'
+require 'json'
 
 
 #--------
@@ -26,12 +27,15 @@ def settle_incoming_msg( sock )
 
 		else
 			msg = sock.gets()
-			puts "#{ sock }: #{msg}"
-			
+			#puts "#{ sock }: #{msg}"
 			dispatch_msg( msg  , sock)
 		end
 	
-	rescue
+	rescue Exception => e
+		
+		puts e.message()
+		puts e.backtrace()
+
 	end
 end
 
@@ -54,7 +58,9 @@ end
 
 
 #----------------
+$loaded = {}
 $fp = nil
+$myqueue = []
 
 def dispatch_msg( msg , sock ) 
 	
@@ -68,14 +74,25 @@ def dispatch_msg( msg , sock )
 		msg_payload = msg_arr * " "
 		broadcast(sock, msg_payload )
 
+
+
 	elsif  msg_header[/loadfile/]
 		
-		if $loaded == 0
-			$loaded = 1
-			loadfile
+		if $loaded[msg_arr[1]] == nil
+			loadfile( msg_arr[1] )
 		else
 			puts "Already loaded"	
 		end	
+
+
+
+	elsif msg_header[/loadmodel/]
+
+		if $loaded[msg_arr[1]] == nil
+			loadmodel( msg_arr[1] )
+		else
+			puts "Already loaded"
+		end
 
 
 	elsif msg_header[/fopen/] != nil
@@ -110,6 +127,44 @@ def dispatch_msg( msg , sock )
 
 		end
 
+
+	elsif msg_header[/to_predict/]
+
+		if $model == nil 
+
+			puts "Model not loaded"
+		else
+
+			msg_arr.shift()
+			msg_payload = msg_arr * " "
+
+			tohlc = msg_payload.split(",")
+
+			o = tohlc[2].to_f
+			h = tohlc[3].to_f
+			l = tohlc[4].to_f
+			c = tohlc[5].to_f
+
+			extract_prop(o,h,l,c, $myqueue)
+			
+			# Collected enough 
+			if $myqueue.length == 5
+
+				result = []
+				extract_pattern( $myqueue , $model , 0 , result )
+				
+				if result[0] + result[1] != 0
+					puts msg_payload
+					p result
+				end
+
+				$myqueue.shift()
+			else
+
+				puts "Not enough data yet. #{ $myqueue.length} "
+			end
+		end	
+
 	elsif msg_header[/data/] 
 
 		if $fp != nil
@@ -127,13 +182,15 @@ def dispatch_msg( msg , sock )
 end
 
 
+
+
 #--------------
 $record = {}
-$loaded = 0
 
-def loadfile()
 
-	fp =  File.open( "econevent.dat")
+def loadfile( econevent_file )
+
+	fp =  File.open( econevent_file )
 	line = fp.gets()
 	while ( !fp.eof() )
 		
@@ -147,10 +204,49 @@ def loadfile()
 		end
 
 	end
+	$loaded[ econevent_file ] = 1
+	fp.close()
 
-	p $record
 
 end
+
+
+#-------------------
+$model = nil
+
+def loadmodel( model_file )
+
+	puts "Loading model #{ model_file }"
+	
+	require "modeling.rb"
+	begin 
+		
+		$model = {}
+		fp =  File.open( model_file )
+		
+		while ( !fp.eof() )	
+
+			line = fp.gets()
+
+			arrs = line.split(",").map { |i| i.to_i }
+			key =  arrs[0...10]
+			val =  arrs[10...12]
+			$model[key] = val
+		end
+		
+		$loaded[ model_file ] = 1
+			
+		
+	rescue
+		puts e.message
+	end
+
+	
+	
+	fp.close()
+
+end
+
 
 
 
