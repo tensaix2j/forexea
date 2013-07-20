@@ -1,11 +1,11 @@
 //+------------------------------------------------------------------+
-//|                                                  JJ_mtdaemon.mq4 |
-//|                                               Copyright 2013, JJ |
+//|                                           tensaix2j_mtdaemon.mq4 |
+//|                                        Copyright 2013, tensaix2j |
 //|                                                                  |
 //+------------------------------------------------------------------+
 
 
-#property copyright "Copyright 2013, JJ"
+#property copyright "Copyright 2013, tensaix2j"
 #property link      ""
 
 
