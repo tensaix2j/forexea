@@ -24,7 +24,7 @@ int OnInit()
   {
 //---
 
-   int ret = initBidAskScraper( "C:/Users/tensaix2j/Programming/forex/Candlestick_"  + Symbol() + "_" + IntegerToString( Period()) +  ".txt");
+   int ret = initBidAskScraper( "C:/Users/tensaix2j/Programming/forex/tmp/Candlestick_"  + Symbol() + "_" + IntegerToString( Period()) +  ".txt");
    
    
 //---
@@ -38,36 +38,34 @@ void OnDeinit(const int reason)
 //---
    
   }
+  
+string PadToAccuracy( string price, int digitaccuracy ) {
+   
+   string concat = "";
+   int i;
+   for ( i = 0 ; i < digitaccuracy - StringLen( price ) ; i++ ) {
+      
+      concat = concat + " ";
+   }
+   concat = concat + price ;
+   return concat;
+   
+}
+  
+  
 //+------------------------------------------------------------------+
 //| Expert tick function                                             |
 //+------------------------------------------------------------------+
 void OnTick()
   {
 //---
-      int digitaccuracy = 5;
-      if ( Symbol() == "USDJPY" ) {  
-         digitaccuracy = 2;
-      }
       
-      string stropen = DoubleToStr( Open[1], digitaccuracy );
-      if ( StringLen( stropen ) < 6 ) {
-         stropen = " " + stropen;
-      }
-      string strhigh = DoubleToStr( High[1], digitaccuracy );
-      if ( StringLen( strhigh ) < 6 ) {
-         strhigh = " " + strhigh;
-      }
-      string strlow = DoubleToStr( Low[1], digitaccuracy );
-      if ( StringLen( strlow ) < 6 ) {
-         strlow = " " + strlow;
-      }
-      string strclose = DoubleToStr( Close[1], digitaccuracy );
-      if ( StringLen( strclose ) < 6 ) {
-         strclose = " " + strclose;
-      }
+      string stropen   = PadToAccuracy( DoubleToStr( Open[1], Digits ),  Digits + 4 );
+      string strhigh   = PadToAccuracy( DoubleToStr( High[1], Digits ),  Digits + 4 );
+      string strlow    = PadToAccuracy( DoubleToStr( Low[1], Digits ),   Digits + 4 );
+      string strclose  = PadToAccuracy( DoubleToStr( Close[1], Digits ), Digits + 4 );
       
-        
-    writeString( TimeToStr( Time[1] ) + " " + DoubleToStr(Time[1],0) + " " + stropen + " " + strhigh + " " + strlow + " " + strclose + "\n");
+      writeString( TimeToStr( Time[1] ) + " " + DoubleToStr(Time[1],0) + " " + stropen + " " + strhigh + " " + strlow + " " + strclose + "\n");
      
   }
 //+------------------------------------------------------------------+

@@ -25,7 +25,7 @@ void writeString( string str );
 int OnInit()
   {
 //---
-   int ret = initBidAskScraper( "C:/Users/tensaix2j/Programming/forex/BidAsk_" + Symbol() + ".txt");
+   int ret = initBidAskScraper( "C:/Users/tensaix2j/Programming/forex/tmp/BidAsk_" + Symbol() + ".txt");
    
 
 //---
@@ -40,27 +40,32 @@ void OnDeinit(const int reason)
       deinitBidAskScraper();
    
   }
+  
+  
+string PadToAccuracy( string price, int digitaccuracy ) {
+   
+   string concat = "";
+   int i;
+   for ( i = 0 ; i < digitaccuracy - StringLen( price ) ; i++ ) {
+      
+      concat = concat + " ";
+   }
+   concat = concat + price ;
+   return concat;
+   
+}
+  
+  
 //+------------------------------------------------------------------+
 //| Expert tick function                                             |
 //+------------------------------------------------------------------+
 void OnTick()
   {
 //---
-      int digitaccuracy = 5;
-      if ( Symbol() == "USDJPY" ) {  
-         digitaccuracy = 2;
-      }
       
-      string strbid = DoubleToStr(Bid, digitaccuracy );
-      if ( StringLen( strbid ) < 6 ) {
-         strbid = " " + strbid;
-      }
+      string strbid = PadToAccuracy( DoubleToStr(Bid, Digits ) , Digits + 4 );
+      string strask = PadToAccuracy( DoubleToStr(Ask, Digits ) , Digits + 4 );
       
-      string strask = DoubleToStr(Ask,digitaccuracy);
-      if ( StringLen( strask) < 6 ) {
-         strask = " " + strask;
-      }
-         
       writeString( TimeToStr( TimeCurrent() ) + " " + DoubleToStr(TimeCurrent(),0) + " " + strbid + " " + strask + "\n");
       
   }
